@@ -672,6 +672,7 @@ nv.models.lineChart = function() {
             duration = _;
             renderWatch.reset(duration);
             lines.duration(duration);
+            lines2.duration(duration);
             xAxis.duration(duration);
             x2Axis.duration(duration);
             yAxis.duration(duration);
