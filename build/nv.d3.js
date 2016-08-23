@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.3 (https://github.com/novus/nvd3) 2016-07-14 */
+/* nvd3 version 1.8.3-dev.0.0.1 (https://github.com/novus/nvd3) 2016-08-23 */
 (function(){
 
 // set up main nv object
@@ -4198,7 +4198,11 @@ nv.models.discreteBarChart = function() {
 
             chart.update = function() {
                 dispatch.beforeUpdate();
-                container.transition().duration(duration).call(chart);
+                if (duration === 0) {
+                    container.call(chart);
+                } else {
+                    container.transition().duration(duration).call(chart);
+                }
             };
             chart.container = this;
 
@@ -6655,36 +6659,55 @@ nv.models.lineChart = function() {
             // Update Axes
             //============================================================
             function updateXAxis() {
-              if(showXAxis) {
-                g.select('.nv-focus .nv-x.nv-axis')
-                  .transition()
-                  .duration(duration)
-                  .call(xAxis)
-                ;
-              }
+                var axis = g.select('.nv-focus .nv-x.nv-axis');
+                if(showXAxis) {
+                    if (duration === 0) {
+                        axis
+                          .call(xAxis);
+                    } else {
+                        axis
+                          .transition()
+                          .duration(duration)
+                          .call(xAxis);
+                    }
+                }
             }
 
             function updateYAxis() {
-              if(showYAxis) {
-                if (mirrorEnable) { // Mirror Chart
-                    g.select('.nv-focus .nv-y.nv-axis.nv-axis-above')
-                      .transition()
-                      .duration(duration)
-                      .call(yAboveAxis)
-                    ;
-                    g.select('.nv-focus .nv-y.nv-axis.nv-axis-below')
-                      .transition()
-                      .duration(duration)
-                      .call(yBelowAxis)
-                    ;
-                } else {
-                    g.select('.nv-focus .nv-y.nv-axis')
-                      .transition()
-                      .duration(duration)
-                      .call(yAxis)
-                    ;
+                var axis, axisAbove, axisBelow;
+                if(showYAxis) {
+                    if (mirrorEnable) { // Mirror Chart
+                        axisAbove = g.select('.nv-focus .nv-y.nv-axis.nv-axis-above');
+                        axisBelow = g.select('.nv-focus .nv-y.nv-axis.nv-axis-below');
+                        if (duration === 0) {
+                            axisAbove
+                              .call(yAboveAxis);
+                            axisBelow
+                              .call(yAboveAxis);
+
+                        } else {
+                            axisAbove
+                              .transition()
+                              .duration(duration)
+                              .call(yAboveAxis);
+                            axisBelow
+                              .transition()
+                              .duration(duration)
+                              .call(yAboveAxis);
+                        }
+                    } else {
+                        axis = g.select('.nv-focus .nv-y.nv-axis');
+                        if (duration === 0) {
+                            axis
+                              .call(yAxis);
+                        } else {
+                            axis
+                              .transition()
+                              .duration(duration)
+                              .call(yAxis);
+                        }
+                    }
                 }
-              }
             }
 
             g.select('.nv-focus .nv-x.nv-axis')
@@ -7040,6 +7063,7 @@ nv.models.lineChart = function() {
             duration = _;
             renderWatch.reset(duration);
             lines.duration(duration);
+            lines2.duration(duration);
             xAxis.duration(duration);
             x2Axis.duration(duration);
             yAxis.duration(duration);
@@ -14493,5 +14517,5 @@ nv.models.sunburstChart = function() {
 
 };
 
-nv.version = "1.8.3";
+nv.version = "1.8.3-dev.0.0.1";
 })();
