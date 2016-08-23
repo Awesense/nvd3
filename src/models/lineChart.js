@@ -287,36 +287,55 @@ nv.models.lineChart = function() {
             // Update Axes
             //============================================================
             function updateXAxis() {
-              if(showXAxis) {
-                g.select('.nv-focus .nv-x.nv-axis')
-                  .transition()
-                  .duration(duration)
-                  .call(xAxis)
-                ;
-              }
+                var axis = g.select('.nv-focus .nv-x.nv-axis');
+                if(showXAxis) {
+                    if (duration === 0) {
+                        axis
+                          .call(xAxis);
+                    } else {
+                        axis
+                          .transition()
+                          .duration(duration)
+                          .call(xAxis);
+                    }
+                }
             }
 
             function updateYAxis() {
-              if(showYAxis) {
-                if (mirrorEnable) { // Mirror Chart
-                    g.select('.nv-focus .nv-y.nv-axis.nv-axis-above')
-                      .transition()
-                      .duration(duration)
-                      .call(yAboveAxis)
-                    ;
-                    g.select('.nv-focus .nv-y.nv-axis.nv-axis-below')
-                      .transition()
-                      .duration(duration)
-                      .call(yBelowAxis)
-                    ;
-                } else {
-                    g.select('.nv-focus .nv-y.nv-axis')
-                      .transition()
-                      .duration(duration)
-                      .call(yAxis)
-                    ;
+                var axis, axisAbove, axisBelow;
+                if(showYAxis) {
+                    if (mirrorEnable) { // Mirror Chart
+                        axisAbove = g.select('.nv-focus .nv-y.nv-axis.nv-axis-above');
+                        axisBelow = g.select('.nv-focus .nv-y.nv-axis.nv-axis-below');
+                        if (duration === 0) {
+                            axisAbove
+                              .call(yAboveAxis);
+                            axisBelow
+                              .call(yAboveAxis);
+
+                        } else {
+                            axisAbove
+                              .transition()
+                              .duration(duration)
+                              .call(yAboveAxis);
+                            axisBelow
+                              .transition()
+                              .duration(duration)
+                              .call(yAboveAxis);
+                        }
+                    } else {
+                        axis = g.select('.nv-focus .nv-y.nv-axis');
+                        if (duration === 0) {
+                            axis
+                              .call(yAxis);
+                        } else {
+                            axis
+                              .transition()
+                              .duration(duration)
+                              .call(yAxis);
+                        }
+                    }
                 }
-              }
             }
 
             g.select('.nv-focus .nv-x.nv-axis')
