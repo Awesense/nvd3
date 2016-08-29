@@ -311,7 +311,7 @@ nv.models.lineChart = function() {
                             axisAbove
                               .call(yAboveAxis);
                             axisBelow
-                              .call(yAboveAxis);
+                              .call(yBelowAxis);
 
                         } else {
                             axisAbove
@@ -321,7 +321,7 @@ nv.models.lineChart = function() {
                             axisBelow
                               .transition()
                               .duration(duration)
-                              .call(yAboveAxis);
+                              .call(yBelowAxis);
                         }
                     } else {
                         axis = g.select('.nv-focus .nv-y.nv-axis');
