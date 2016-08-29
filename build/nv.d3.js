@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.3-dev.0.0.1 (https://github.com/novus/nvd3) 2016-08-23 */
+/* nvd3 version 1.8.3-dev.0.0.2 (https://github.com/novus/nvd3) 2016-08-29 */
 (function(){
 
 // set up main nv object
@@ -6683,7 +6683,7 @@ nv.models.lineChart = function() {
                             axisAbove
                               .call(yAboveAxis);
                             axisBelow
-                              .call(yAboveAxis);
+                              .call(yBelowAxis);
 
                         } else {
                             axisAbove
@@ -6693,7 +6693,7 @@ nv.models.lineChart = function() {
                             axisBelow
                               .transition()
                               .duration(duration)
-                              .call(yAboveAxis);
+                              .call(yBelowAxis);
                         }
                     } else {
                         axis = g.select('.nv-focus .nv-y.nv-axis');
@@ -14517,5 +14517,5 @@ nv.models.sunburstChart = function() {
 
 };
 
-nv.version = "1.8.3-dev.0.0.1";
+nv.version = "1.8.3-dev.0.0.2";
 })();
