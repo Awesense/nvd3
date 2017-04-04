@@ -15,6 +15,7 @@ nv.models.sunburst = function() {
         , container = null
         , color = nv.utils.defaultColor()
         , showLabels = false
+        , radialLabels = true
         , labelFormat = function(d){if(mode === 'count'){return d.name + ' #' + d.value}else{return d.name + ' ' + (d.value || d.size)}}
         , labelThreshold = 0.02
         , sort = function(d1, d2){return d1.name > d2.name;}
@@ -163,12 +164,22 @@ nv.models.sunburst = function() {
                                 return 0;
                             }
                         })
-                        .attr("transform", function() {
+                        .attr("transform", function(d1) {
                             var width = this.getBBox().width;
-                            if(e.depth === 0)
-                            return "translate(" + (width / 2 * - 1) + ",0)";
+                            var tx, ty = 0;
+                            var c = arc.centroid(d1);
+
+                            if(e.depth === 0){
+                                tx = radialLabels ? (width / 2 * - 1) : c[0];
+                                return 'translate(' + tx + ',0)';
+                            }
                             else if(e.depth === d.depth){
-                                return "translate(" + (y(e.y) + 5) + ",0)";
+                                tx = radialLabels ? (y(e.y) + 5) : c[0];
+                                ty = radialLabels ? ty : c[1];
+                                return 'translate(' + tx + ',' + ty +')';
+                            }
+                            else if (!radialLabels) {
+                                return 'translate(' + c + ')';
                             }
                             else {
                                 var centerAngle = computeCenterAngle(e);
@@ -283,6 +294,15 @@ nv.models.sunburst = function() {
 
                 //this way labels are on top of newly added arcs
                 cG.append('text')
+                    .attr('text-anchor', function () {
+                        return !radialLabels ? 'middle' : 'auto';
+                    })
+                    .attr('dominant-baseline', function () {
+                        return !radialLabels ? 'middle' : 'auto';
+                    })
+                    .attr('class', function (d) {
+                        return 'nv-text-depth-' + d.depth;
+                    })
                     .text( function(e){ return labelFormat(e)})
                     .transition()
                     .duration(duration)
@@ -298,6 +318,9 @@ nv.models.sunburst = function() {
                         var width = this.getBBox().width;
                         if(d.depth === 0){
                             return "rotate(0)translate(" + (width / 2 * -1) + ",0)";
+                        }
+                        else if (!radialLabels) {
+                            return "translate(" + arc.centroid(d) + ") ";
                         }
                         else {
                             var centerAngle = computeCenterAngle(d);
@@ -349,6 +372,7 @@ nv.models.sunburst = function() {
         duration:   {get: function(){return duration;}, set: function(_){duration=_;}},
         groupColorByParent: {get: function(){return groupColorByParent;}, set: function(_){groupColorByParent=!!_;}},
         showLabels: {get: function(){return showLabels;}, set: function(_){showLabels=!!_}},
+        radialLabels: {get: function(){return radialLabels;}, set:function(_){radialLabels=!!_}},
         labelFormat: {get: function(){return labelFormat;}, set: function(_){labelFormat=_}},
         labelThreshold: {get: function(){return labelThreshold;}, set: function(_){labelThreshold=_}},
         sort: {get: function(){return sort;}, set: function(_){sort=_}},
