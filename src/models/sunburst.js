@@ -166,14 +166,20 @@ nv.models.sunburst = function() {
                         })
                         .attr("transform", function(d1) {
                             var width = this.getBBox().width;
-                            if(e.depth === 0) {
-                                return "translate(" + (width / 2 * - 1) + ",0)";
+                            var tx, ty = 0;
+                            var c = arc.centroid(d1);
+
+                            if(e.depth === 0){
+                                tx = radialLabels ? (width / 2 * - 1) : c[0];
+                                return 'translate(' + tx + ',0)';
                             }
-                            else if(radialLabels && e.depth === d.depth){
-                                return "translate(" + (y(e.y) + 5) + ",0)";
+                            else if(e.depth === d.depth){
+                                tx = radialLabels ? (y(e.y) + 5) : c[0];
+                                ty = radialLabels ? ty : c[1];
+                                return 'translate(' + tx + ',' + ty +')';
                             }
                             else if (!radialLabels) {
-                                return "translate(" + arc.centroid(d1) + ") ";
+                                return 'translate(' + c + ')';
                             }
                             else {
                                 var centerAngle = computeCenterAngle(e);
