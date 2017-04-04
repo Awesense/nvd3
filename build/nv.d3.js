@@ -1,4 +1,4 @@
-/* nvd3 version 1.8.3-dev.0.1.0 (https://github.com/novus/nvd3) 2017-04-03 */
+/* nvd3 version 1.8.3-dev.0.1.1 (https://github.com/novus/nvd3) 2017-04-03 */
 (function(){
 
 // set up main nv object
@@ -11100,7 +11100,7 @@ nv.models.pie = function() {
 
             container = d3.select(this)
             if (arcsRadius.length === 0) {
-                var outer = radius - radius / 5;
+                var outer = growOnHover ? (radius - radius / 5) : radius;
                 var inner = donutRatio * radius;
                 for (var i = 0; i < data[0].length; i++) {
                     arcsRadiusOuter.push(outer);
@@ -14541,5 +14541,5 @@ nv.models.sunburstChart = function() {
 
 };
 
-nv.version = "1.8.3-dev.0.1.0";
+nv.version = "1.8.3-dev.0.1.1";
 })();
