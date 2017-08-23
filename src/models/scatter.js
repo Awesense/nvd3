@@ -566,9 +566,15 @@ nv.models.scatter = function() {
             })
             .watchTransition(renderWatch, 'scatter points')
             .attr('transform', function (d) {
-                return 'translate(' +
-                    nv.utils.NaNtoZero(x(getX(d[0], d[1]))) + ',' +
-                    nv.utils.NaNtoZero(y(getY(d[0], d[1]))) + ')'
+                // Mirror Chart
+                var yValueTemp = y0(getY(d[0],d[1]));
+                if (d[0].position === 'above') {
+                    yValueTemp = y0Above(getY(d[0],d[1]));
+                }
+                if (d[0].position === 'below') {
+                    yValueTemp = y0Below(getY(d[0],d[1]));
+                }
+                return 'translate(' + nv.utils.NaNtoZero(x0(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(yValueTemp) + ')';
             });
 
             // Update Point Appearance [shape, size]
