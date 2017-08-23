@@ -10,10 +10,11 @@ nv.models.parallelCoordinatesChart = function () {
         var dimensionTooltip = nv.models.tooltip();
 
         var margin = { top: 0, right: 0, bottom: 0, left: 0 }
+        , marginTop = null
         , width = null
-		, height = null
+        , height = null
         , showLegend = true
-		, color = nv.utils.defaultColor()
+        , color = nv.utils.defaultColor()
         , state = nv.utils.state()
         , dimensionData = []
         , displayBrush = true
@@ -25,7 +26,7 @@ nv.models.parallelCoordinatesChart = function () {
         ;
 
 	    //============================================================
-	
+
 		//============================================================
         // Private Variables
         //------------------------------------------------------------
@@ -52,18 +53,18 @@ nv.models.parallelCoordinatesChart = function () {
 
         tooltip.contentGenerator(function(data) {
             var str = '<table><thead><tr><td class="legend-color-guide"><div style="background-color:' + data.color + '"></div></td><td><strong>' + data.key + '</strong></td></tr></thead>';
-            if(data.series.length !== 0) 
+            if(data.series.length !== 0)
             {
                 str = str + '<tbody><tr><td height ="10px"></td></tr>';
                 data.series.forEach(function(d){
                     str = str + '<tr><td class="legend-color-guide"><div style="background-color:' + d.color + '"></div></td><td class="key">' + d.key + '</td><td class="value">' + d.value + '</td></tr>';
-                }); 
+                });
                 str = str + '</tbody>';
             }
             str = str + '</table>';
             return str;
         });
-        
+
         //============================================================
         // Chart function
         //------------------------------------------------------------
@@ -116,7 +117,7 @@ nv.models.parallelCoordinatesChart = function () {
                 } else {
                     container.selectAll('.nv-noData').remove();
                 }
-                
+
                 //------------------------------------------------------------
                 // Setup containers and skeleton of chart
 
@@ -124,7 +125,7 @@ nv.models.parallelCoordinatesChart = function () {
                 var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-parallelCoordinatesChart').append('g');
 
                 var g = wrap.select('g');
-                
+
                 gEnter.append('g').attr('class', 'nv-parallelCoordinatesWrap');
                 gEnter.append('g').attr('class', 'nv-legendWrap');
 
@@ -143,7 +144,7 @@ nv.models.parallelCoordinatesChart = function () {
                         .datum(dimensionData.sort(function (a, b) { return a.originalPosition - b.originalPosition; }))
                         .call(legend);
 
-                    if (margin.top != legend.height()) {
+                    if (!marginTop && legend.height() !== margin.top) {
                         margin.top = legend.height();
                         availableHeight = nv.utils.availableHeight(height, container, margin);
                     }
@@ -158,12 +159,12 @@ nv.models.parallelCoordinatesChart = function () {
                     .height(availableHeight)
                     .dimensionData(dimensionData)
                     .displayBrush(displayBrush);
-		
+
 		        var parallelCoordinatesWrap = g.select('.nv-parallelCoordinatesWrap ')
                   .datum(data);
 
 		        parallelCoordinatesWrap.transition().call(parallelCoordinates);
-		  
+
 				//============================================================
                 // Event Handling/Dispatching (in chart's scope)
                 //------------------------------------------------------------
@@ -224,7 +225,7 @@ nv.models.parallelCoordinatesChart = function () {
                 key: evt.label,
                 color: evt.color,
                 series: []
-             }      
+             }
             if(evt.values){
                 Object.keys(evt.values).forEach(function (d) {
                     var dim = evt.dimensions.filter(function (dd) {return dd.key === d;})[0];
@@ -253,7 +254,7 @@ nv.models.parallelCoordinatesChart = function () {
 		 //============================================================
         // Expose Public Variables
         //------------------------------------------------------------
-		
+
 		// expose chart's sub-components
         chart.dispatch = dispatch;
         chart.parallelCoordinates = parallelCoordinates;
@@ -271,12 +272,15 @@ nv.models.parallelCoordinatesChart = function () {
             displayBrush: { get: function () { return displayBrush; }, set: function (_) { displayBrush = _; } },
             noData: { get: function () { return noData; }, set: function (_) { noData = _; } },
             nanValue: { get: function () { return nanValue; }, set: function (_) { nanValue = _; } },
-            
+
             // options that require extra logic in the setter
             margin: {
                 get: function () { return margin; },
                 set: function (_) {
-                    margin.top = _.top !== undefined ? _.top : margin.top;
+                    if (_.top !== undefined) {
+                        margin.top = _.top;
+                        marginTop = _.top;
+                    }
                     margin.right = _.right !== undefined ? _.right : margin.right;
                     margin.bottom = _.bottom !== undefined ? _.bottom : margin.bottom;
                     margin.left = _.left !== undefined ? _.left : margin.left;
