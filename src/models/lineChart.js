@@ -491,7 +491,6 @@ nv.models.lineChart = function() {
                 };
 
                 interactiveLayer.tooltip
-                    .chartContainer(chart.container.parentNode)
                     .valueFormatter(interactiveLayer.tooltip.valueFormatter() || defaultValueFormatter)
                     .data({
                         value: chart.x()( singlePoint,pointIndex ),
@@ -563,7 +562,6 @@ nv.models.lineChart = function() {
                     + 'V' + (2 * y - 8);
             }
 
-
             function updateBrushBG() {
                 if (!brush.empty()) brush.extent(brushExtent);
                 brushBG
@@ -613,7 +611,6 @@ nv.models.lineChart = function() {
                         })
                 );
                 focusLinesWrap.transition().duration(duration).call(lines);
-
 
                 // Update Main (Focus) Axes
                 updateXAxis();

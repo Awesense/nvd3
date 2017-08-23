@@ -430,7 +430,6 @@ nv.models.stackedAreaChart = function() {
                 }
 
                 interactiveLayer.tooltip
-                    .chartContainer(that.parentNode)
                     .valueFormatter(valueFormatter)
                     .data(
                     {
@@ -553,4 +552,10 @@ nv.models.stackedAreaChart = function() {
     nv.utils.initOptions(chart);
 
     return chart;
+};
+
+nv.models.stackedAreaWithFocusChart = function() {
+  return nv.models.stackedAreaChart()
+    .margin({ bottom: 30 })
+    .focusEnable( true );
 };
