@@ -35,6 +35,7 @@ nv.models.tooltip = function() {
         ,   duration = 100 // Tooltip movement duration, in ms.
         ,   headerEnabled = true // If is to show the tooltip header.
         ,   nvPointerEventsClass = "nv-pointer-events-none" // CSS class to specify whether element should not have mouse events.
+        ,   enableComplexValueFormatter = false
     ;
 
     // Format function for the tooltip values column.
@@ -42,6 +43,9 @@ nv.models.tooltip = function() {
     // i is series index
     // p is point containing the value
     var valueFormatter = function(d, i, p) {
+        if (enableComplexValueFormatter) {
+            return d.value; // Mirror Chart
+        }
         return d;
     };
 
@@ -98,7 +102,12 @@ nv.models.tooltip = function() {
 
         trowEnter.append("td")
             .classed("value",true)
-            .html(function(p, i) { return valueFormatter(p.value, i, p) });
+            .html(function(p, i) {
+                if (enableComplexValueFormatter) { // Mirror Chart
+                    return valueFormatter(p, i);
+                }
+                return valueFormatter(p.value, i, p);
+            });
 
         trowEnter.filter(function (p,i) { return p.percent !== undefined }).append("td")
             .classed("percent", true)
@@ -316,6 +325,7 @@ nv.models.tooltip = function() {
         contentGenerator: {get: function(){return contentGenerator;}, set: function(_){contentGenerator=_;}},
         valueFormatter: {get: function(){return valueFormatter;}, set: function(_){valueFormatter=_;}},
         headerFormatter: {get: function(){return headerFormatter;}, set: function(_){headerFormatter=_;}},
+        enableComplexValueFormatter: {get: function(){return enableComplexValueFormatter;}, set: function(_){enableComplexValueFormatter=_;}},
         keyFormatter: {get: function(){return keyFormatter;}, set: function(_){keyFormatter=_;}},
         headerEnabled: {get: function(){return headerEnabled;}, set: function(_){headerEnabled=_;}},
         position: {get: function(){return position;}, set: function(_){position=_;}},

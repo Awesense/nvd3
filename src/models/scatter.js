@@ -15,10 +15,14 @@ nv.models.scatter = function() {
         , container    = null
         , x            = d3.scale.linear()
         , y            = d3.scale.linear()
+        // Mirror Chart
+        , yAbove       = d3.scale.linear()
+        , yBelow       = d3.scale.linear()
         , z            = d3.scale.linear() //linear because d3.svg.shape.size is treated as area
         , getX         = function(d) { return d.x } // accessor to get the x value
         , getY         = function(d) { return d.y } // accessor to get the y value
         , getSize      = function(d) { return d.size || 1} // accessor to get the point size
+        , getPosition  = function(d) { return d.position } // Mirror Chart
         , getShape     = function(d) { return d.shape || 'circle' } // accessor to get point shape
         , forceX       = [] // List of numbers to Force into the X scale (ie. 0, or a max / min, etc.)
         , forceY       = [] // List of numbers to Force into the Y scale
@@ -50,7 +54,8 @@ nv.models.scatter = function() {
     // Private Variables
     //------------------------------------------------------------
 
-    var x0, y0, z0 // used to store previous scales
+    // Mirror Chart
+    var x0, y0, y0Above, y0Below, z0 // used to store previous scales
         , xDom, yDom // used to store previous domains
         , width0
         , height0
@@ -137,7 +142,7 @@ nv.models.scatter = function() {
                 d3.merge(
                     data.map(function(d) {
                         return d.values.map(function(d,i) {
-                            return { x: getX(d,i), y: getY(d,i), size: getSize(d,i) }
+                            return { x: getX(d,i), y: getY(d,i), size: getSize(d,i), position: getPosition(d, i) /* Mirror Chart */ }
                         })
                     })
                 );
@@ -150,17 +155,24 @@ nv.models.scatter = function() {
             else
                 x.range(xRange || [0, availableWidth]);
 
+             var min;
              if (logScale) {
-                    var min = d3.min(seriesData.map(function(d) { if (d.y !== 0) return d.y; }));
+                    min = d3.min(seriesData.map(function(d) { if (d.y !== 0) return d.y; }).concat(forceY));
                     y.clamp(true)
                         .domain(yDomain || d3.extent(seriesData.map(function(d) {
                             if (d.y !== 0) return d.y;
                             else return min * 0.1;
                         }).concat(forceY)))
                         .range(yRange || [availableHeight, 0]);
+                    yAbove.clamp(true).domain(yDomain || [1, min]).range(yRange || [availableHeight/2, 0]);
+                    yBelow.clamp(true).domain(yDomain || [min, 1]).range(yRange || [availableHeight, availableHeight/2]);
                 } else {
                         y.domain(yDomain || d3.extent(seriesData.map(function (d) { return d.y;}).concat(forceY)))
                         .range(yRange || [availableHeight, 0]);
+                        // Mirror Chart
+                        min = d3.min(seriesData.map(function (d) { return d.y;}).concat(forceY)) || 0;
+                        yAbove.domain(yDomain || [1, min]).range(yRange || [availableHeight/2, 0]);
+                        yBelow.domain(yDomain || [min, 1]).range(yRange || [availableHeight, availableHeight/2]);
                 }
 
             z   .domain(sizeDomain || d3.extent(seriesData.map(function(d) { return d.size }).concat(forceSize)))
@@ -189,6 +201,9 @@ nv.models.scatter = function() {
 
             x0 = x0 || x;
             y0 = y0 || y;
+            // Mirror Chart
+            y0Above = y0Above || yAbove;
+            y0Below = y0Below || yBelow;
             z0 = z0 || z;
 
             var scaleDiff = x(1) !== x0(1) || y(1) !== y0(1) || z(1) !== z0(1);
@@ -495,7 +510,15 @@ nv.models.scatter = function() {
                 .style('fill', function (d) { return d.color })
                 .style('stroke', function (d) { return d.color })
                 .attr('transform', function(d) {
-                    return 'translate(' + nv.utils.NaNtoZero(x0(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(y0(getY(d[0],d[1]))) + ')'
+                    // Mirror Chart
+                    var yValueTemp = y0(getY(d[0],d[1]));
+                    if (d[0].position === 'above') {
+                        yValueTemp = y0Above(getY(d[0],d[1]));
+                    }
+                    if (d[0].position === 'below') {
+                        yValueTemp = y0Below(getY(d[0],d[1]));
+                    }
+                    return 'translate(' + nv.utils.NaNtoZero(x0(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(yValueTemp) + ')'
                 })
                 .attr('d',
                     nv.utils.symbol()
@@ -506,10 +529,18 @@ nv.models.scatter = function() {
             groups.exit().selectAll('path.nv-point')
                 .watchTransition(renderWatch, 'scatter exit')
                 .attr('transform', function(d) {
-                    return 'translate(' + nv.utils.NaNtoZero(x(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(y(getY(d[0],d[1]))) + ')'
+                    // Mirror Chart
+                    var yValueTemp = y(getY(d[0],d[1]));
+                    if (d[0].position === 'above') {
+                        yValueTemp = yAbove(getY(d[0],d[1]));
+                    }
+                    if (d[0].position === 'below') {
+                        yValueTemp = yBelow(getY(d[0],d[1]));
+                    }
+                    return 'translate(' + nv.utils.NaNtoZero(x(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(yValueTemp) + ')'
                 })
                 .remove();
-
+            
             //============================================================
             // Point Update Optimisation Notes
             //------------------------------------------------------------
@@ -535,9 +566,15 @@ nv.models.scatter = function() {
             })
             .watchTransition(renderWatch, 'scatter points')
             .attr('transform', function (d) {
-                return 'translate(' +
-                    nv.utils.NaNtoZero(x(getX(d[0], d[1]))) + ',' +
-                    nv.utils.NaNtoZero(y(getY(d[0], d[1]))) + ')'
+                // Mirror Chart
+                var yValueTemp = y0(getY(d[0],d[1]));
+                if (d[0].position === 'above') {
+                    yValueTemp = y0Above(getY(d[0],d[1]));
+                }
+                if (d[0].position === 'below') {
+                    yValueTemp = y0Below(getY(d[0],d[1]));
+                }
+                return 'translate(' + nv.utils.NaNtoZero(x0(getX(d[0],d[1]))) + ',' + nv.utils.NaNtoZero(yValueTemp) + ')';
             });
 
             // Update Point Appearance [shape, size]
@@ -613,6 +650,9 @@ nv.models.scatter = function() {
             //store old scales for use in transitions on update
             x0 = x.copy();
             y0 = y.copy();
+            // Mirror Chart
+            y0Above = yAbove.copy();
+            y0Below = yBelow.copy();
             z0 = z.copy();
 
             width0 = width;
@@ -663,6 +703,9 @@ nv.models.scatter = function() {
         height:       {get: function(){return height;}, set: function(_){height=_;}},
         xScale:       {get: function(){return x;}, set: function(_){x=_;}},
         yScale:       {get: function(){return y;}, set: function(_){y=_;}},
+        // Mirror Chart
+        yAboveScale:  {get: function(){return yAbove;}, set: function(_){yAbove=_;}},
+        yBelowScale:  {get: function(){return yBelow;}, set: function(_){yBelow=_;}},
         pointScale:   {get: function(){return z;}, set: function(_){z=_;}},
         xDomain:      {get: function(){return xDomain;}, set: function(_){xDomain=_;}},
         yDomain:      {get: function(){return yDomain;}, set: function(_){yDomain=_;}},

@@ -8,6 +8,8 @@ nv.models.lineChart = function() {
     var lines = nv.models.line()
         , xAxis = nv.models.axis()
         , yAxis = nv.models.axis()
+        , yAboveAxis = nv.models.axis() // Mirror Chart
+        , yBelowAxis = nv.models.axis() // Mirror Chart
         , legend = nv.models.legend()
         , interactiveLayer = nv.interactiveGuideline()
         , tooltip = nv.models.tooltip()
@@ -27,6 +29,9 @@ nv.models.lineChart = function() {
         , useInteractiveGuideline = false
         , x
         , y
+        , yAbove // Mirror Chart
+        , yBelow // Mirror Chart
+        , mirrorEnable = false // Mirror Chart
         , focusEnable = false
         , state = nv.utils.state()
         , defaultState = null
@@ -38,6 +43,8 @@ nv.models.lineChart = function() {
     // set options on sub-objects for this chart
     xAxis.orient('bottom').tickPadding(7);
     yAxis.orient(rightAlignYAxis ? 'right' : 'left');
+    yAboveAxis.orient(rightAlignYAxis ? 'right' : 'left'); // Mirror Chart
+    yBelowAxis.orient(rightAlignYAxis ? 'right' : 'left'); // Mirror Chart
 
     lines.clipEdge(true).duration(0);
 
@@ -81,7 +88,13 @@ nv.models.lineChart = function() {
         renderWatch.reset();
         renderWatch.models(lines);
         if (showXAxis) renderWatch.models(xAxis);
-        if (showYAxis) renderWatch.models(yAxis);
+        if (showYAxis) {
+            renderWatch.models(yAxis);
+            if (mirrorEnable) { // Mirror Chart
+                renderWatch.models(yAboveAxis);
+                renderWatch.models(yBelowAxis);
+            }
+        }
 
         selection.each(function(data) {
             var container = d3.select(this);
@@ -133,6 +146,11 @@ nv.models.lineChart = function() {
             x = lines.xScale();
             y = lines.yScale();
 
+            if (mirrorEnable) { // Mirror Chart
+                yAbove = lines.yAboveScale(); // Mirror Chart
+                yBelow = lines.yBelowScale(); // Mirror Chart
+            }
+
             // Setup containers and skeleton of chart
             var wrap = container.selectAll('g.nv-wrap.nv-lineChart').data([data]);
             var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-lineChart').append('g');
@@ -144,10 +162,18 @@ nv.models.lineChart = function() {
             focusEnter.append('g').attr('class', 'nv-background').append('rect');
             focusEnter.append('g').attr('class', 'nv-x nv-axis');
             focusEnter.append('g').attr('class', 'nv-y nv-axis');
+            if (mirrorEnable) { // Mirror Chart
+                focusEnter.append('g').attr('class', 'nv-y nv-axis nv-axis-above');
+                focusEnter.append('g').attr('class', 'nv-y nv-axis nv-axis-below');
+            }
             focusEnter.append('g').attr('class', 'nv-linesWrap');
             focusEnter.append('g').attr('class', 'nv-interactive');
 
             var contextEnter = gEnter.append('g').attr('class', 'nv-focusWrap');
+            if (mirrorEnable) { // Mirror Chart
+                contextEnter.append('g').attr('class', 'nv-y nv-axis nv-axis-above');
+                contextEnter.append('g').attr('class', 'nv-y nv-axis nv-axis-below');
+            }
 
             // Legend
             if (!showLegend) {
@@ -217,33 +243,76 @@ nv.models.lineChart = function() {
             }
 
             if (showYAxis) {
-                yAxis
-                    .scale(y)
-                    ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
-                    .tickSize( -availableWidth, 0);
+                if (mirrorEnable) { // Mirror Chart
+                    yAboveAxis
+                        .scale(yAbove)
+                        ._ticks( nv.utils.calcTicksY(availableHeight/72, data) )
+                        .tickSize( -availableWidth, 0);
+                    yBelowAxis
+                        .scale(yBelow)
+                        ._ticks( nv.utils.calcTicksY(availableHeight/72, data) )
+                        .tickSize( -availableWidth, 0);
+                } else {
+                    yAxis
+                        .scale(y)
+                        ._ticks( nv.utils.calcTicksY(availableHeight/36, data) )
+                        .tickSize( -availableWidth, 0);
+                }
             }
 
             //============================================================
             // Update Axes
             //============================================================
             function updateXAxis() {
-              if(showXAxis) {
-                g.select('.nv-focus .nv-x.nv-axis')
-                  .transition()
-                  .duration(duration)
-                  .call(xAxis)
-                ;
-              }
+                var axis = g.select('.nv-focus .nv-x.nv-axis');
+                if(showXAxis) {
+                    if (duration === 0) {
+                        axis
+                          .call(xAxis);
+                    } else {
+                        axis
+                          .transition()
+                          .duration(duration)
+                          .call(xAxis);
+                    }
+                }
             }
 
             function updateYAxis() {
-              if(showYAxis) {
-                g.select('.nv-focus .nv-y.nv-axis')
-                  .transition()
-                  .duration(duration)
-                  .call(yAxis)
-                ;
-              }
+                var axis, axisAbove, axisBelow;
+                if(showYAxis) {
+                    if (mirrorEnable) { // Mirror Chart
+                        axisAbove = g.select('.nv-focus .nv-y.nv-axis.nv-axis-above');
+                        axisBelow = g.select('.nv-focus .nv-y.nv-axis.nv-axis-below');
+                        if (duration === 0) {
+                            axisAbove
+                              .call(yAboveAxis);
+                            axisBelow
+                              .call(yBelowAxis);
+
+                        } else {
+                            axisAbove
+                              .transition()
+                              .duration(duration)
+                              .call(yAboveAxis);
+                            axisBelow
+                              .transition()
+                              .duration(duration)
+                              .call(yBelowAxis);
+                        }
+                    } else {
+                        axis = g.select('.nv-focus .nv-y.nv-axis');
+                        if (duration === 0) {
+                            axis
+                              .call(yAxis);
+                        } else {
+                            axis
+                              .transition()
+                              .duration(duration)
+                              .call(yAxis);
+                        }
+                    }
+                }
             }
 
             g.select('.nv-focus .nv-x.nv-axis')
@@ -455,6 +524,8 @@ nv.models.lineChart = function() {
     chart.xAxis = xAxis;
     chart.x2Axis = focus.xAxis
     chart.yAxis = yAxis;
+    chart.yAboveAxis = yAboveAxis; // Mirror Chart
+    chart.yBelowAxis = yBelowAxis; // Mirror Chart
     chart.y2Axis = focus.yAxis
     chart.interactiveLayer = interactiveLayer;
     chart.tooltip = tooltip;
@@ -470,6 +541,7 @@ nv.models.lineChart = function() {
         legendPosition: {get: function(){return legendPosition;}, set: function(_){legendPosition=_;}},
         showXAxis:      {get: function(){return showXAxis;}, set: function(_){showXAxis=_;}},
         showYAxis:    {get: function(){return showYAxis;}, set: function(_){showYAxis=_;}},
+        mirrorEnable:    {get: function(){return mirrorEnable;}, set: function(_){mirrorEnable=_;}},
         defaultState:    {get: function(){return defaultState;}, set: function(_){defaultState=_;}},
         noData:    {get: function(){return noData;}, set: function(_){noData=_;}},
         // Focus options, mostly passed onto focus model.
@@ -551,5 +623,13 @@ nv.models.lineChart = function() {
 nv.models.lineWithFocusChart = function() {
   return nv.models.lineChart()
     .margin({ bottom: 30 })
+    .focusEnable( true );
+};
+
+// Mirror Chart
+nv.models.lineWithFocusMirrorChart = function() {
+  return nv.models.lineChart()
+    .margin({ bottom: 30 })
+    .mirrorEnable( true )
     .focusEnable( true );
 };
