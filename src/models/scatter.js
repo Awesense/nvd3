@@ -167,12 +167,15 @@ nv.models.scatter = function() {
                     yAbove.clamp(true).domain(yDomain || [1, min]).range(yRange || [availableHeight/2, 0]);
                     yBelow.clamp(true).domain(yDomain || [min, 1]).range(yRange || [availableHeight, availableHeight/2]);
                 } else {
-                        y.domain(yDomain || d3.extent(seriesData.map(function (d) { return d.y;}).concat(forceY)))
+                    y.clamp(true)
+                        .domain(yDomain || d3.extent(seriesData.map(function (d) {
+                            return d.y;
+                        }).concat(forceY)))
                         .range(yRange || [availableHeight, 0]);
-                        // Mirror Chart
-                        min = d3.min(seriesData.map(function (d) { return d.y;}).concat(forceY)) || 0;
-                        yAbove.domain(yDomain || [1, min]).range(yRange || [availableHeight/2, 0]);
-                        yBelow.domain(yDomain || [min, 1]).range(yRange || [availableHeight, availableHeight/2]);
+                    // Mirror Chart
+                    min = d3.min(seriesData.map(function (d) { return d.y; }).concat(forceY)) || 0;
+                    yAbove.clamp(true).domain(yDomain || [1, min]).range(yRange || [availableHeight/2, 0]);
+                    yBelow.clamp(true).domain(yDomain || [min, 1]).range(yRange || [availableHeight, availableHeight/2]);
                 }
 
             z   .domain(sizeDomain || d3.extent(seriesData.map(function(d) { return d.size }).concat(forceSize)))
